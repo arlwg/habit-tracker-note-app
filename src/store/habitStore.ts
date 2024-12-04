@@ -30,9 +30,8 @@ const useHabitStore = create<HabitStore>()(
           newCompletions[date] = !newCompletions[date];
 
           // Calculate streak
-          const today = new Date();
           let streak = 0;
-          let currentDate = new Date();
+          const currentDate = new Date();
 
           while (newCompletions[currentDate.toISOString().split('T')[0]]) {
             streak++;
