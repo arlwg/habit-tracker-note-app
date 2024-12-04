@@ -2,14 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-
-interface Note {
-  id: string;
-  title: string;
-  content: string;
-  color: string;
-  createdAt: string;
-}
+import useNoteStore, { Note } from '@/store/noteStore';
 
 const colors = [
   '#10B981', // green
@@ -21,20 +14,15 @@ const colors = [
 ];
 
 export default function Notes() {
-  const [notes, setNotes] = useState<Note[]>([]);
+  const notes = useNoteStore((state) => state.notes);
+  const addNote = useNoteStore((state) => state.addNote);
+  const deleteNote = useNoteStore((state) => state.deleteNote);
   const [showNewNote, setShowNewNote] = useState(false);
   const [newNote, setNewNote] = useState({ title: '', content: '', color: colors[0] });
 
-  const addNote = () => {
+  const handleAddNote = () => {
     if (newNote.title.trim() || newNote.content.trim()) {
-      setNotes([
-        ...notes,
-        {
-          id: Math.random().toString(36).substr(2, 9),
-          ...newNote,
-          createdAt: new Date().toISOString(),
-        },
-      ]);
+      addNote(newNote);
       setNewNote({ title: '', content: '', color: colors[0] });
       setShowNewNote(false);
     }
@@ -51,9 +39,17 @@ export default function Notes() {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
-              className="bg-[#1a1a1a] p-4 rounded-lg"
+              className="group bg-[#1a1a1a] p-4 rounded-lg relative"
               style={{ borderLeft: `4px solid ${note.color}` }}
             >
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => deleteNote(note.id)}
+                className="absolute top-2 right-2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                ×
+              </motion.button>
               <h3 className="text-lg font-semibold mb-2">{note.title}</h3>
               <p className="text-gray-400 whitespace-pre-wrap">{note.content}</p>
               <div className="text-xs text-gray-500 mt-4">
@@ -122,7 +118,7 @@ export default function Notes() {
                     Cancel
                   </button>
                   <button
-                    onClick={addNote}
+                    onClick={handleAddNote}
                     className="flex-1 bg-blue-500 hover:bg-blue-600 p-2 rounded"
                     disabled={!newNote.title.trim() && !newNote.content.trim()}
                   >

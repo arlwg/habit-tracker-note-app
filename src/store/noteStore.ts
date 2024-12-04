@@ -2,6 +2,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { v4 as uuidv4 } from 'uuid';
 
 export interface Note {
   id: string;
@@ -15,7 +16,6 @@ interface NoteStore {
   notes: Note[];
   addNote: (note: Omit<Note, 'id' | 'createdAt'>) => void;
   deleteNote: (id: string) => void;
-  updateNote: (id: string, updates: Partial<Omit<Note, 'id' | 'createdAt'>>) => void;
 }
 
 const useNoteStore = create<NoteStore>()(
@@ -25,7 +25,7 @@ const useNoteStore = create<NoteStore>()(
       
       addNote: (noteData) => {
         const newNote: Note = {
-          id: Math.random().toString(36).substr(2, 9),
+          id: uuidv4(),
           ...noteData,
           createdAt: new Date().toISOString(),
         };
@@ -34,15 +34,7 @@ const useNoteStore = create<NoteStore>()(
 
       deleteNote: (id) => {
         set((state) => ({
-          notes: state.notes.filter((note) => note.id !== id),
-        }));
-      },
-
-      updateNote: (id, updates) => {
-        set((state) => ({
-          notes: state.notes.map((note) =>
-            note.id === id ? { ...note, ...updates } : note
-          ),
+          notes: state.notes.filter((note) => note.id !== id)
         }));
       },
     }),

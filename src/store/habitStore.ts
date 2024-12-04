@@ -21,6 +21,12 @@ const useHabitStore = create<HabitStore>()(
         set((state) => ({ habits: [...state.habits, newHabit] }));
       },
 
+      deleteHabit: (habitId) => {
+        set((state) => ({
+          habits: state.habits.filter((h) => h.id !== habitId)
+        }));
+      },
+
       toggleCompletion: (habitId, date) => {
         set((state) => {
           const habit = state.habits.find((h) => h.id === habitId);
@@ -31,11 +37,27 @@ const useHabitStore = create<HabitStore>()(
 
           // Calculate streak
           let streak = 0;
-          const currentDate = new Date();
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          let currentDate = new Date(today);
 
-          while (newCompletions[currentDate.toISOString().split('T')[0]]) {
-            streak++;
+          // First check if today is completed
+          const todayStr = currentDate.toISOString().split('T')[0];
+          if (!newCompletions[todayStr]) {
+            streak = 0;
+          } else {
+            streak = 1;
+            // Then count backwards from yesterday
             currentDate.setDate(currentDate.getDate() - 1);
+            
+            while (true) {
+              const dateStr = currentDate.toISOString().split('T')[0];
+              if (!newCompletions[dateStr]) {
+                break;
+              }
+              streak++;
+              currentDate.setDate(currentDate.getDate() - 1);
+            }
           }
 
           const updatedHabits = state.habits.map((h) =>

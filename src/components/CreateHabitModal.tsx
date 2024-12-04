@@ -20,12 +20,17 @@ interface Props {
 export default function CreateHabitModal({ onClose }: Props) {
   const [name, setName] = useState('');
   const [color, setColor] = useState(colors[0]);
+  const [startDate, setStartDate] = useState(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today.toISOString().split('T')[0];
+  });
   const addHabit = useHabitStore((state) => state.addHabit);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim()) {
-      addHabit({ name: name.trim(), color });
+      addHabit({ name: name.trim(), color, startDate });
       onClose();
     }
   };
@@ -57,7 +62,17 @@ export default function CreateHabitModal({ onClose }: Props) {
               autoFocus
             />
           </div>
-          
+
+          <div>
+            <label className="block text-sm text-gray-400 mb-2">Start Date</label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="w-full bg-[#2a2a2a] p-2 rounded border border-[#3a3a3a] focus:border-blue-500 focus:outline-none"
+            />
+          </div>
+
           <div>
             <label className="block text-sm text-gray-400 mb-2">Color</label>
             <div className="grid grid-cols-6 gap-2">

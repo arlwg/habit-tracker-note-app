@@ -5,23 +5,43 @@ import { motion, AnimatePresence } from 'framer-motion';
 import useHabitStore from '@/store/habitStore';
 import { Habit, HabitStore } from '@/types/habit';
 
-const months = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-function getDatesForGrid() {
+function getDatesForGrid(startDate?: string) {
   const dates: string[] = [];
   const today = new Date();
-  for (let i = 0; i < 9 * 12; i++) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - i);
-    dates.unshift(date.toISOString().split('T')[0]);
+  today.setHours(0, 0, 0, 0);
+  
+  let start;
+  if (startDate) {
+    start = new Date(startDate);
+    start.setHours(0, 0, 0, 0);
+  } else {
+    // Default to last 365 days if no start date
+    start = new Date(today);
+    start.setDate(start.getDate() - 364);
   }
+
+  // Ensure we don't go past today
+  const end = new Date(today);
+  
+  // Generate dates from start to end
+  const current = new Date(start);
+  while (current <= end) {
+    dates.push(current.toISOString().split('T')[0]);
+    current.setDate(current.getDate() + 1);
+  }
+
   return dates;
 }
 
 export default function HabitGrid({ habit }: { habit: Habit }) {
   const toggleCompletion = useHabitStore((state: HabitStore) => state.toggleCompletion);
-  const dates = getDatesForGrid();
+  const deleteHabit = useHabitStore((state: HabitStore) => state.deleteHabit);
+  const dates = getDatesForGrid(habit.startDate);
   const [hoveredDate, setHoveredDate] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  
+  // Calculate number of columns needed (7 days per week)
+  const numWeeks = Math.ceil(dates.length / 7);
   
   return (
     <motion.div
@@ -49,15 +69,24 @@ export default function HabitGrid({ habit }: { habit: Habit }) {
         >
           {habit.streak} DAY STREAK
         </motion.div>
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={() => setShowDeleteConfirm(true)}
+          className="text-gray-400 hover:text-red-500 transition-colors px-2"
+        >
+          ×
+        </motion.button>
       </motion.div>
       
-      <div className="grid grid-cols-9 gap-0.5">
-        {months.map((month) => (
-          <div key={month} className="text-gray-400 text-xs mb-0.5">
-            {month}
-          </div>
-        ))}
-        
+      <div 
+        className="grid gap-[2px]" 
+        style={{ 
+          gridTemplateColumns: `repeat(${numWeeks}, 1fr)`,
+          maxHeight: '120px',
+          overflowY: 'hidden'
+        }}
+      >
         {dates.map((date) => {
           const isCompleted = habit.completions[date];
           return (
@@ -68,10 +97,10 @@ export default function HabitGrid({ habit }: { habit: Habit }) {
               onHoverStart={() => setHoveredDate(date)}
               onHoverEnd={() => setHoveredDate(null)}
               onClick={() => toggleCompletion(habit.id, date)}
-              className="relative"
+              className="relative aspect-square"
             >
               <motion.div
-                className={`w-full pt-[100%] rounded-sm transition-colors ${
+                className={`w-full h-full rounded-[1px] transition-colors ${
                   isCompleted ? 'bg-current' : 'bg-[#2a2a2a] hover:bg-[#3a3a3a]'
                 }`}
                 style={{ color: habit.color }}
@@ -96,6 +125,45 @@ export default function HabitGrid({ habit }: { habit: Habit }) {
           );
         })}
       </div>
+
+      <AnimatePresence>
+        {showDeleteConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            onClick={(e) => e.target === e.currentTarget && setShowDeleteConfirm(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-[#1a1a1a] p-6 rounded-lg max-w-sm w-full mx-4"
+            >
+              <h3 className="text-xl mb-4">Delete Habit</h3>
+              <p className="text-gray-400 mb-6">Are you sure you want to delete "{habit.name}"? This action cannot be undone.</p>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 bg-[#2a2a2a] hover:bg-[#3a3a3a] p-2 rounded transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    deleteHabit(habit.id);
+                    setShowDeleteConfirm(false);
+                  }}
+                  className="flex-1 bg-red-500 hover:bg-red-600 p-2 rounded transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 } 
