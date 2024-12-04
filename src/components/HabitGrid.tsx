@@ -142,7 +142,7 @@ export default function HabitGrid({ habit }: { habit: Habit }) {
               className="bg-[#1a1a1a] p-6 rounded-lg max-w-sm w-full mx-4"
             >
               <h3 className="text-xl mb-4">Delete Habit</h3>
-              <p className="text-gray-400 mb-6">Are you sure you want to delete "{habit.name}"? This action cannot be undone.</p>
+              <p className="text-gray-400 mb-6">Are you sure you want to delete &ldquo;{habit.name}&rdquo;? This action cannot be undone.</p>
               <div className="flex space-x-3">
                 <button
                   onClick={() => setShowDeleteConfirm(false)}

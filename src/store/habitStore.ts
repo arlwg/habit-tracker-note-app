@@ -39,7 +39,7 @@ const useHabitStore = create<HabitStore>()(
           let streak = 0;
           const today = new Date();
           today.setHours(0, 0, 0, 0);
-          let currentDate = new Date(today);
+          const currentDate = new Date(today);
 
           // First check if today is completed
           const todayStr = currentDate.toISOString().split('T')[0];
