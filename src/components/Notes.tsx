@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import useNoteStore, { Note } from '@/store/noteStore';
+import useNoteStore from '@/store/noteStore';
 
 const colors = [
   '#10B981', // green
